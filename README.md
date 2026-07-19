@@ -12,7 +12,7 @@ Dify workflows autonomously — everything a human can do in the UI, now scripta
 [![138 Tools](https://img.shields.io/badge/tools-138-purple.svg)](#tools)
 [![Live Verified](https://img.shields.io/badge/live--verified-cloud.dify.ai-brightgreen.svg)](#live-verified)
 
-**Claude Code** · **Codex** · **Gemini CLI** · **Cursor** · **Cline** · **Aider** — pick your agent, they all work.
+Works with **Claude Code** · **Codex** · **Gemini CLI** · **Cursor** · **Cline** · **Windsurf** · **Roo Code** · **Continue** · **Aider** · **Zed** — and any other MCP-compatible or shell-capable agent.
 
 </div>
 
@@ -44,6 +44,28 @@ contract, same safety guarantees.
 │                   └────────────────────┘                │
 └──────────────────────────────────────────────────────────┘
 ```
+
+## Works with your favorite agents
+
+dify-mcp is agent-agnostic by design — no SDK lock-in, no proprietary protocol. If your
+agent can run a shell command, it can use the CLI. If it speaks MCP, it can attach the
+server. Most popular agents do both:
+
+| Agent | MCP | CLI | Quick setup |
+|-------|:---:|:---:|-------------|
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | ✅ | ✅ | `claude mcp add dify -- difywf mcp serve` |
+| [Codex](https://github.com/openai/codex) | ✅ | ✅ | `[mcp_servers.dify]` in `~/.codex/config.toml` |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | ✅ | ✅ | `mcpServers.dify` in `~/.gemini/settings.json` |
+| [Cursor](https://cursor.com) | ✅ | ✅ | `.cursor/mcp.json` |
+| [Cline](https://github.com/cline/cline) | ✅ | ✅ | Same JSON shape as Cursor |
+| [Windsurf](https://codeium.com/windsurf) | ✅ | ✅ | MCP server config in Windsurf settings |
+| [Roo Code](https://github.com/RooCodeInc/Roo-Code) | ✅ | ✅ | MCP server config in Roo Code settings |
+| [Continue](https://github.com/continuedev/continue) | ✅ | ✅ | `experimental.mcpServer` in `config.json` |
+| [Zed](https://zed.dev) | ✅ | ✅ | `context_servers` in `~/.config/zed/settings.json` |
+| [Aider](https://github.com/Aider-AI/aider) | - | ✅ | Run `difywf` commands directly in chat |
+
+Don't see your agent? If it supports MCP or can run shell commands, it works. The
+[connect section](#connect-your-agent-mcp) below has copy-paste configs for each host.
 
 ## Why you'll star this
 
@@ -122,24 +144,90 @@ difywf wf publish <app-id> --yes                             # ship it
 
 ### Connect your agent (MCP)
 
-One line per host — same binary, same tools:
+Same binary, same 138 tools. Copy-paste the config for your host:
+
+<details>
+<summary><b>Claude Code</b></summary>
 
 ```bash
-# Claude Code
 claude mcp add dify -- difywf mcp serve
+```
+</details>
 
-# Codex (~/.codex/config.toml)
+<details>
+<summary><b>Codex</b> (<code>~/.codex/config.toml</code>)</summary>
+
+```toml
 [mcp_servers.dify]
 command = "difywf"
 args = ["mcp", "serve"]
-
-# Gemini CLI (~/.gemini/settings.json)
-{ "mcpServers": { "dify": { "command": "difywf", "args": ["mcp", "serve"] } } }
-
-# Cursor (.cursor/mcp.json) / Cline — same JSON shape
 ```
+</details>
 
-No `difywf` on PATH? Use the absolute path: `node /path/to/dify-mcp/bin/difywf.js mcp serve`.
+<details>
+<summary><b>Cursor</b> (<code>.cursor/mcp.json</code>) · <b>Cline</b> · <b>Roo Code</b> · <b>Continue</b></summary>
+
+```json
+{
+  "mcpServers": {
+    "dify": {
+      "command": "difywf",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><b>Gemini CLI</b> (<code>~/.gemini/settings.json</code>)</summary>
+
+```json
+{
+  "mcpServers": {
+    "dify": {
+      "command": "difywf",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><b>Windsurf</b> (Codeium)</summary>
+
+Add an MCP server in Windsurf settings (`Cmd+,` -> MCP Servers) with command `difywf`
+and args `["mcp", "serve"]`.
+</details>
+
+<details>
+<summary><b>Zed</b> (<code>~/.config/zed/settings.json</code>)</summary>
+
+```json
+{
+  "context_servers": {
+    "dify": {
+      "command": "difywf",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><b>Aider</b> (CLI only — no MCP)</summary>
+
+Aider doesn't support MCP, but it can run shell commands. Just use the CLI directly:
+
+```
+/run difywf app list
+/run difywf wf draft sync <app-id> --graph graph.json
+```
+</details>
+
+> No `difywf` on PATH? Use the absolute path: `node /path/to/dify-mcp/bin/difywf.js mcp serve`.
 
 ## Tools
 
