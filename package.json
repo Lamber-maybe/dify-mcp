@@ -1,7 +1,7 @@
 {
-  "name": "difywf",
+  "name": "dify-mcp",
   "version": "0.1.0",
-  "description": "Agent-agnostic Dify workflow authoring: one tool registry, CLI + MCP surfaces",
+  "description": "The most complete Dify MCP server + CLI \u2014 138 tools that let any AI agent build, test & ship Dify workflows autonomously",
   "type": "module",
   "bin": {
     "difywf": "bin/difywf.js"
@@ -21,5 +21,17 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0"
-  }
+  },
+  "keywords": [
+    "dify",
+    "mcp",
+    "cli",
+    "workflow",
+    "ai-agent",
+    "claude-code",
+    "codex",
+    "gemini",
+    "automation",
+    "llm"
+  ]
 }
