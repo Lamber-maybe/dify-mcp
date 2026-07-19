@@ -1,0 +1,25 @@
+{
+  "name": "difywf",
+  "version": "0.1.0",
+  "description": "Agent-agnostic Dify workflow authoring: one tool registry, CLI + MCP surfaces",
+  "type": "module",
+  "bin": {
+    "difywf": "bin/difywf.js"
+  },
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.ts",
+    "smoke:mcp": "node scripts/mcp-smoke.mjs"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "nodes": [
+    { "id": "start1", "data": { "type": "start", "title": "Start", "variables": [] } },
+    { "id": "llm1", "data": { "type": "llm", "title": "LLM", "model": { "provider": "openai", "name": "gpt-4o-mini", "mode": "chat" }, "prompt_template": [{ "role": "user", "text": "{{#ghost.output#}} and {{#llm2.text#}}" }] } },
+    { "id": "llm2", "data": { "type": "llm", "title": "LLM2", "model": { "provider": "openai", "name": "gpt-4o-mini", "mode": "chat" }, "prompt_template": [{ "role": "user", "text": "hi" }] } },
+    { "id": "orphan1", "data": { "type": "code", "title": "Orphan", "code_language": "python3", "code": "def main(): return {}", "outputs": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "start1", "target": "llm1" },
+    { "id": "e2", "source": "llm1", "target": "llm2" },
+    { "id": "e3", "source": "llm2", "target": "llm1" }
+  ]
+}

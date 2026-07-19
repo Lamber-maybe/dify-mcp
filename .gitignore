@@ -1,0 +1,8 @@
+node_modules/
+.difywf/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+cookies.json
+*.cookie
