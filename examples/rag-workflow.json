@@ -1,0 +1,90 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "data": {
+        "type": "start",
+        "title": "Start",
+        "variables": [
+          {
+            "variable": "query",
+            "label": "User Query",
+            "type": "text-input",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "knowledge_retrieval",
+      "data": {
+        "type": "knowledge-retrieval",
+        "title": "Knowledge Retrieval",
+        "query_variable_selector": [
+          "start",
+          "query"
+        ],
+        "dataset_ids": [
+          "sample-dataset-id"
+        ],
+        "retrieval_mode": "single"
+      }
+    },
+    {
+      "id": "llm",
+      "data": {
+        "type": "llm",
+        "title": "LLM",
+        "model": {
+          "provider": "openai",
+          "name": "gpt-4o-mini",
+          "mode": "chat",
+          "completion_params": {
+            "temperature": 0.7
+          }
+        },
+        "prompt_template": [
+          {
+            "role": "system",
+            "text": "Use the following context retrieved from the knowledge base to answer the query:\n\n{{#knowledge_retrieval.result#}}"
+          },
+          {
+            "role": "user",
+            "text": "{{#start.query#}}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "answer",
+      "data": {
+        "type": "answer",
+        "title": "Answer",
+        "answer": "{{#llm.text#}}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "start-to-knowledge",
+      "source": "start",
+      "target": "knowledge_retrieval",
+      "sourceHandle": "source",
+      "targetHandle": "target"
+    },
+    {
+      "id": "knowledge-to-llm",
+      "source": "knowledge_retrieval",
+      "target": "llm",
+      "sourceHandle": "source",
+      "targetHandle": "target"
+    },
+    {
+      "id": "llm-to-answer",
+      "source": "llm",
+      "target": "answer",
+      "sourceHandle": "source",
+      "targetHandle": "target"
+    }
+  ]
+}

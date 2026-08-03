@@ -68,3 +68,15 @@ test("sys and env references are not treated as node refs", () => {
   };
   assert.deepEqual(codes(validateGraph(graph)), []);
 });
+
+test("all example templates in examples/ produce no error-level issues", () => {
+  const examplesDir = path.join(dir, "..", "examples");
+  const files = ["minimal-workflow.json", "llm-workflow.json", "rag-workflow.json"];
+
+  for (const file of files) {
+    const graph: Graph = JSON.parse(fs.readFileSync(path.join(examplesDir, file), "utf8"));
+    const issues = validateGraph(graph);
+    assert.deepEqual(codes(issues), [], `Expected no error issues in ${file}, got: ${JSON.stringify(issues)}`);
+  }
+});
+

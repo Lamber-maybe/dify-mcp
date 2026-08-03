@@ -1,0 +1,44 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "data": {
+        "type": "start",
+        "title": "Start",
+        "variables": [
+          {
+            "variable": "input_text",
+            "label": "Input Text",
+            "type": "text-input",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "end",
+      "data": {
+        "type": "end",
+        "title": "End",
+        "outputs": [
+          {
+            "variable": "output_text",
+            "value_selector": [
+              "start",
+              "input_text"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "start-to-end",
+      "source": "start",
+      "target": "end",
+      "sourceHandle": "source",
+      "targetHandle": "target"
+    }
+  ]
+}

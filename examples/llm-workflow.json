@@ -1,0 +1,64 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "data": {
+        "type": "start",
+        "title": "Start",
+        "variables": [
+          {
+            "variable": "query",
+            "label": "User Query",
+            "type": "text-input",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "llm",
+      "data": {
+        "type": "llm",
+        "title": "LLM",
+        "model": {
+          "provider": "openai",
+          "name": "gpt-4o-mini",
+          "mode": "chat",
+          "completion_params": {
+            "temperature": 0.7
+          }
+        },
+        "prompt_template": [
+          {
+            "role": "user",
+            "text": "Answer the user's question concisely:\n\n{{#start.query#}}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "answer",
+      "data": {
+        "type": "answer",
+        "title": "Answer",
+        "answer": "{{#llm.text#}}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "start-to-llm",
+      "source": "start",
+      "target": "llm",
+      "sourceHandle": "source",
+      "targetHandle": "target"
+    },
+    {
+      "id": "llm-to-answer",
+      "source": "llm",
+      "target": "answer",
+      "sourceHandle": "source",
+      "targetHandle": "target"
+    }
+  ]
+}
