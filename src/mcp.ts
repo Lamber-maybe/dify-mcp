@@ -94,6 +94,15 @@ function startHttpServer(port: number): void {
 }
 
 async function handleHttpRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const pathname = new URL(req.url ?? "/", "http://localhost").pathname;
+  if (req.method === "GET" && pathname === "/health") {
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify({ status: "ok" }));
+    return;
+  }
+  if (pathname !== "/mcp") {
+    return writeJsonRpcError(res, 404, -32000, "Not found. MCP endpoint is POST /mcp.");
+  }
   if (req.method !== "POST") {
     return writeJsonRpcError(res, 405, -32000, "Method not allowed. POST a JSON-RPC message to /mcp.");
   }
