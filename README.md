@@ -240,7 +240,28 @@ difywf mcp serve --http --port 8080
 
 Point any Streamable-HTTP-capable client at `http://<host>:8080/mcp`. Each POST is
 a self-contained JSON-RPC message (initialize / tools/list / tools/call); no
-session is required. GET and DELETE are rejected with 405.
+session is required. GET and DELETE requests to `/mcp` are rejected with 405.
+
+To run it as a Docker service:
+
+```bash
+docker build -t dify-mcp .
+docker run -d --name dify-mcp \
+  -p 3000:3000 \
+  -e DIFY_API_BASE=https://your-dify.example.com \
+  -e DIFY_OPENAPI_TOKEN=your-token \
+  dify-mcp
+```
+
+The MCP URL to configure in Dify is `http://<docker-host>:3000/mcp`. When Dify
+and this service run in the same Docker Compose network, use the service name,
+for example `http://dify-mcp:3000/mcp`. The container health endpoint is
+`GET /health`. The `difywf` CLI is also available inside the container, for
+example `docker exec dify-mcp difywf --version`.
+
+Console-only tools may additionally require `DIFY_CONSOLE_TOKEN` and
+`DIFY_WORKSPACE_ID`. Prefer Docker secrets or your deployment platform's secret
+store instead of putting tokens in the image.
 </details>
 
 > No `difywf` on PATH? Use the absolute path: `node /path/to/dify-mcp/bin/difywf.js mcp serve`.

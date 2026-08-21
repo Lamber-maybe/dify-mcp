@@ -1,0 +1,12 @@
+.git
+.github
+.difywf
+node_modules
+npm-debug.log*
+Dockerfile*
+docs
+examples
+scripts
+test
+*.md
+.env*

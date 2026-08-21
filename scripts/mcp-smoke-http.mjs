@@ -46,6 +46,10 @@ try {
   await ready;
   console.log("http server ready");
 
+  const health = await fetch(`http://127.0.0.1:${PORT}/health`);
+  assert.equal(health.status, 200);
+  assert.deepEqual(await health.json(), { status: "ok" });
+
   const init = await post({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "difywf-smoke-http", version: "0.1.0" } } });
   const initRes = await readResult(init);
   if (!initRes?.result?.serverInfo?.name) fail(`initialize bad: ${JSON.stringify(initRes)}`);
