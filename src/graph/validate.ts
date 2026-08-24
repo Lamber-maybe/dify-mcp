@@ -73,7 +73,15 @@ const REF_SKIP = new Set(["sys", "env", "conversation"]);
 const VAR_REF = /\{\{#([A-Za-z0-9_-]+)\.([A-Za-z0-9_.\[\]-]+)#\}\}/g;
 
 const nodeType = (n: GraphNode): string | undefined =>
-  (n.data?.type as string | undefined) ?? n.type;
+  // Note: use `||` not `??` — decorative nodes (custom-note) carry an empty
+  // string data.type, so fall through to the node-level `type` (e.g. "custom-note").
+  ((n.data?.type as string | undefined) || undefined) ?? n.type;
+
+// Canvas-only decorative nodes: not executable, intentionally unconnected.
+// Excluded from reachability checks. `custom-note` is Dify's sticky-note
+// annotation (node.type === "custom-note", data.type === ""). Extend this set
+// if other non-executable canvas helpers surface.
+const DECORATIVE_TYPES = new Set(["custom-note"]);
 
 export function validateGraph(
   graph: Graph,
@@ -140,6 +148,8 @@ export function validateGraph(
     for (const next of adj.get(id) ?? []) queue.push(next);
   }
   for (const n of nodes) {
+    const t = nodeType(n);
+    if (t && DECORATIVE_TYPES.has(t)) continue; // canvas notes are intentionally unconnected
     if (!reachable.has(n.id) && rootIds.length > 0) {
       issues.push({ level: "error", code: "UNREACHABLE_NODE", message: `node '${n.id}' is not reachable from start`, nodeId: n.id });
     }

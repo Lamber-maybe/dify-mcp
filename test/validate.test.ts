@@ -69,6 +69,24 @@ test("sys and env references are not treated as node refs", () => {
   assert.deepEqual(codes(validateGraph(graph)), []);
 });
 
+test("custom-note annotation nodes do not trigger false errors", () => {
+  // Dify sticky notes: node.type === "custom-note" but data.type === "".
+  // They are intentionally unconnected and must not raise MISSING_NODE_TYPE
+  // or UNREACHABLE_NODE.
+  const graph: Graph = {
+    nodes: [
+      { id: "s", data: { type: "start", variables: [] } },
+      { id: "a", data: { type: "answer", answer: "hi" } },
+      { id: "note1", type: "custom-note", data: { type: "", text: "a sticky note" } },
+    ],
+    edges: [{ source: "s", target: "a" }],
+  };
+  const got = new Set(codes(validateGraph(graph)));
+  assert.ok(!got.has("MISSING_NODE_TYPE"), "custom-note must not raise MISSING_NODE_TYPE");
+  assert.ok(!got.has("UNREACHABLE_NODE"), "custom-note is intentionally unconnected");
+  assert.deepEqual(codes(validateGraph(graph)), []);
+});
+
 test("all example templates in examples/ produce no error-level issues", () => {
   const examplesDir = path.join(dir, "..", "examples");
   const files = ["minimal-workflow.json", "llm-workflow.json", "rag-workflow.json"];
