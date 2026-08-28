@@ -176,6 +176,7 @@ function buildArgs(flags: Record<string, unknown>): Record<string, unknown> {
     else if (k === "input") args.inputs = kvList(v, "input");
     else if (k === "graph") args.graph = readJsonArg(v, "graph");
     else if (k === "graph-json") args.graph_json = String(v);
+    else if (k === "yaml") args.yaml = readTextArg(v, "yaml");
     else if (k === "credentials") args.credentials = readJsonArg(v, "credentials");
     else if (k === "app-id") args.app_id = v;
     else if (k === "node-id") args.node_id = v;
@@ -185,6 +186,18 @@ function buildArgs(flags: Record<string, unknown>): Record<string, unknown> {
     else args[k.replaceAll("-", "_")] = typeof v === "string" && (v.startsWith("{") || v.startsWith("[")) ? readJsonArg(v, k) : v;
   }
   return args;
+}
+
+// Large DSLs exceed the operating system's per-argument limit. Keep literal
+// YAML backward compatible while allowing the same explicit @file/stdin
+// channel already used by --graph.
+export function readTextArg(value: unknown, name: string): string {
+  const s = String(value);
+  if (s === "-") return fs.readFileSync(0, "utf8");
+  if (!s.startsWith("@")) return s;
+  const p = s.slice(1);
+  if (!fs.existsSync(p)) throw new Error(`--${name}: file not found: ${p}`);
+  return fs.readFileSync(p, "utf8");
 }
 
 // --graph/--credentials accept: "-" (stdin), "@file"/path, or an inline JSON string.
@@ -349,6 +362,7 @@ function printHelp(positional: string[]): void {
     "  --yes                         confirm destructive ops (maps to confirm=true)",
     "  --dry-run                     validate + diff without saving",
     "  --graph <file|-|{json}>       graph input: file, stdin, or inline JSON",
+    "  --yaml <@file|-|yaml>         app-import DSL: explicit file, stdin, or inline YAML",
     "  --input k=v                   workflow input (repeatable)",
     "",
     "Start with: difywf agent guide",

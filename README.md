@@ -149,6 +149,7 @@ difywf wf validate --graph graph.json       # offline: structure, refs, cycles
 difywf wf draft sync <app-id> --graph graph.json --dry-run   # preview diff
 difywf wf draft sync <app-id> --graph graph.json             # save draft
 difywf wf test <app-id> --input query="hello"                # test-run the draft
+difywf app import --yaml @workflow.yml --yes                  # file channel for large DSLs
 difywf wf publish <app-id> --yes                             # ship it
 difywf workflow tool refresh-provider <app-id> --yes        # rebind workflow-as-tool to the published version
 ```

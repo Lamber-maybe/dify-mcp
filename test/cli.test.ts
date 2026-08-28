@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync } from "node:fs";
+import fs, { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { parseFlags, resolveConsoleLoginCredentials } from "../src/cli.ts";
+import { parseFlags, readTextArg, resolveConsoleLoginCredentials } from "../src/cli.ts";
 
 test("parseFlags handles positionals, values, =values, booleans, repeats", () => {
   const { positional, flags } = parseFlags([
@@ -61,4 +61,14 @@ test("output-file carries large structured results outside stdout", () => {
   assert.equal(acknowledgement.output_file, output);
   assert.equal(result.ok, true);
   assert.match(result.data, /golden path/i);
+});
+
+test("yaml @file carries DSLs larger than the operating-system argument limit", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "difywf-yaml-"));
+  const source = path.join(dir, "workflow.yml");
+  const yaml = `kind: app\nworkflow:\n  graph:\n    note: ${"x".repeat(200_000)}\n`;
+  fs.writeFileSync(source, yaml, "utf8");
+  assert.equal(readTextArg(`@${source}`, "yaml"), yaml);
+  assert.equal(readTextArg("kind: app\n", "yaml"), "kind: app\n");
+  assert.throws(() => readTextArg(`@${source}.missing`, "yaml"), /file not found/);
 });
