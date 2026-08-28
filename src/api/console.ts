@@ -57,6 +57,12 @@ export class ConsoleClient {
     const r = await this.call<{ data: string }>(`apps/${appId}/export`);
     return r.ok ? ok(r.data.data) : r;
   }
+  importDsl(payload: Record<string, unknown>): Promise<Result<unknown>> {
+    return this.call("apps/imports", { body: payload });
+  }
+  confirmImport(importId: string): Promise<Result<unknown>> {
+    return this.call(`apps/imports/${importId}/confirm`, { body: {} });
+  }
   createApp(body: Record<string, unknown>): Promise<Result<unknown>> {
     return this.call("apps", { body });
   }

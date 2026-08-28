@@ -482,26 +482,39 @@ export const tools: Tool[] = [
   },
   {
     name: "app.import",
-    summary: "Import an app from DSL. Handles the 2-step confirm flow. Installs plugins; requires confirm=true.",
-    needs: "openapi",
+    summary: "Import an app from DSL through console cookies or OpenAPI. Handles the 2-step confirm flow; requires confirm=true.",
     confirm: true,
-    schema: { type: "object", properties: { workspace_id: S("target workspace"), yaml: S("DSL YAML content"), yaml_url: S("...or YAML URL"), name: S("override name"), description: S(""), confirm: CONFIRM }, required: ["workspace_id", "confirm"] },
+    schema: { type: "object", properties: { workspace_id: S("target workspace; required only for OpenAPI fallback"), yaml: S("DSL YAML content"), yaml_url: S("...or YAML URL"), name: S("override name"), description: S(""), confirm: CONFIRM }, required: ["confirm"] },
     run: async (a, ctx) => {
-      const c = needClient(ctx, "openapi") as OpenapiClient;
-      const wid = req(a, "workspace_id");
       const body: Record<string, unknown> = {};
       if (str(a.yaml)) { body.mode = "yaml-content"; body.yaml_content = str(a.yaml); }
       else if (str(a.yaml_url)) { body.mode = "yaml-url"; body.yaml_url = str(a.yaml_url); }
       else throw new ToolError("USAGE_ERROR", "pass yaml (content) or yaml_url");
       if (str(a.name)) body.name = str(a.name);
       if (str(a.description)) body.description = str(a.description);
-      const imp = await c.importDsl(wid, body);
+      const consoleClient = ctx.console;
+      const openapiClient = ctx.openapi;
+      if (!consoleClient && !openapiClient) {
+        throw new ToolError("AUTH_REQUIRED", "app.import needs console cookies or an OpenAPI token");
+      }
+      const wid = str(a.workspace_id);
+      if (!consoleClient && !wid) {
+        throw new ToolError("USAGE_ERROR", "workspace_id is required for OpenAPI app.import");
+      }
+      const imp = consoleClient
+        ? await consoleClient.importDsl(body)
+        : await openapiClient!.importDsl(wid!, body);
       if (!imp.ok) return imp;
       const data = (imp.data ?? {}) as Record<string, unknown>;
       const importId = str(data.import_id) ?? str(data.id);
-      const pending = data.status === "pending" || data.result === "pending" || (importId && data.result === undefined);
+      const pending = data.status === "pending"
+        || data.status === "completed_but_needs_plugin_install"
+        || data.result === "pending"
+        || (importId && data.result === undefined && !str(data.app_id));
       if (importId && pending) {
-        const conf = await c.confirmImport(wid, importId);
+        const conf = consoleClient
+          ? await consoleClient.confirmImport(importId)
+          : await openapiClient!.confirmImport(wid!, importId);
         return conf.ok ? ok({ imported: true, confirmed: true, ...(conf.data as Record<string, unknown> ?? {}) }) : conf;
       }
       return ok({ imported: true, confirmed: false, ...data });
