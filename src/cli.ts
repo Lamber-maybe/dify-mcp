@@ -105,6 +105,16 @@ export function parseFlags(argv: string[]): { positional: string[]; flags: Recor
   return { positional, flags };
 }
 
+export function resolveConsoleLoginCredentials(
+  flags: Record<string, unknown>,
+  env: NodeJS.ProcessEnv = process.env,
+): { email?: string; password?: string } {
+  return {
+    email: str(flags.email) ?? str(env.DIFY_CONSOLE_EMAIL),
+    password: str(flags.password) ?? str(env.DIFY_CONSOLE_PASSWORD),
+  };
+}
+
 export async function main(): Promise<void> {
   const { positional, flags } = parseFlags(process.argv.slice(2));
   if (flags.version === true || positional[0] === "version") return printRaw(VERSION);
@@ -228,9 +238,16 @@ async function authMain(args: string[], flags: Record<string, unknown>): Promise
     }
     case "login-console": {
       const base = needBase();
-      const email = str(flags.email);
-      const password = str(flags.password);
-      if (!email || !password) return finish(err("USAGE_ERROR", "login-console needs --email and --password"), flags);
+      const { email, password } = resolveConsoleLoginCredentials(flags);
+      if (!email || !password) {
+        return finish(
+          err(
+            "USAGE_ERROR",
+            "login-console needs --email/--password or DIFY_CONSOLE_EMAIL/DIFY_CONSOLE_PASSWORD",
+          ),
+          flags,
+        );
+      }
       const result = await consoleLogin(base, email, password);
       if (result.ok) storeCookies(base, result.data);
       return finish(result.ok ? { ok: true, data: { stored: true, base_url: base, cookies: Object.keys(result.data) } } : (result as Result<unknown>), flags);
@@ -303,6 +320,7 @@ function printHelp(positional: string[]): void {
     "  --base-url <url>              Dify base URL (or DIFY_API_BASE)",
     "  --workspace <id>              workspace id (or DIFY_WORKSPACE_ID)",
     "  --openapi-token / --console-token   tokens (or DIFY_OPENAPI_TOKEN / DIFY_CONSOLE_TOKEN)",
+    "  --email / --password            console login (or DIFY_CONSOLE_EMAIL / DIFY_CONSOLE_PASSWORD)",
     "  --yes                         confirm destructive ops (maps to confirm=true)",
     "  --dry-run                     validate + diff without saving",
     "  --graph <file|-|{json}>       graph input: file, stdin, or inline JSON",

@@ -124,6 +124,10 @@ difywf auth import-cookies --base-url https://cloud.dify.ai --file cookies.json
 # Or self-hosted with email/password (no browser needed):
 difywf auth login-console --base-url https://your-dify --email you@x --password '***'
 
+# Non-interactive bootstrap can keep credentials out of process arguments:
+DIFY_CONSOLE_EMAIL=you@x DIFY_CONSOLE_PASSWORD='***' \
+  difywf auth login-console --base-url https://your-dify
+
 difywf auth status   # confirm: shows base URL + cookie names (values masked)
 ```
 
