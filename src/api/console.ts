@@ -66,6 +66,76 @@ export class ConsoleClient {
   deleteApp(appId: string): Promise<Result<unknown>> {
     return this.call(`apps/${appId}`, { method: "DELETE" });
   }
+  async getAppTags(appId: string): Promise<Result<{ app_id: string; tags: Array<{ id?: string; name: string }> }>> {
+    const app = await this.getApp(appId);
+    if (!app.ok) return app;
+    const raw = (app.data as Record<string, unknown>).tags;
+    const tags = Array.isArray(raw)
+      ? raw.flatMap((item) => {
+          if (!item || typeof item !== "object") return [];
+          const value = item as Record<string, unknown>;
+          const name = nonEmptyString(value.name);
+          if (!name) return [];
+          const id = nonEmptyString(value.id);
+          return [{ ...(id ? { id } : {}), name }];
+        })
+      : [];
+    return ok({ app_id: appId, tags });
+  }
+  listAppTags(): Promise<Result<unknown>> {
+    return this.call("tags", { query: { type: "app" } });
+  }
+  createAppTag(name: string): Promise<Result<unknown>> {
+    return this.call("tags", { body: { name, type: "app" } });
+  }
+  bindAppTag(appId: string, tagId: string): Promise<Result<unknown>> {
+    return this.call("tag-bindings", {
+      body: { tag_ids: [tagId], target_id: appId, type: "app" },
+    });
+  }
+  async ensureAppTag(appId: string, tagName: string): Promise<Result<unknown>> {
+    const before = await this.getAppTags(appId);
+    if (!before.ok) return before;
+    const existing = before.data.tags.find((tag) => tag.name === tagName);
+    if (existing) {
+      return ok({ action: "unchanged", app_id: appId, tag: existing, after: before.data.tags });
+    }
+
+    const listed = await this.listAppTags();
+    if (!listed.ok) return listed;
+    const rows = Array.isArray(listed.data) ? listed.data : [];
+    let tagId: string | undefined;
+    for (const item of rows) {
+      if (!item || typeof item !== "object") continue;
+      const value = item as Record<string, unknown>;
+      if (value.name === tagName) tagId = nonEmptyString(value.id);
+    }
+    let created = false;
+    if (!tagId) {
+      const added = await this.createAppTag(tagName);
+      if (!added.ok) return added;
+      tagId = nonEmptyString((added.data as Record<string, unknown> | null)?.id);
+      if (!tagId) return err("SERVER_ERROR", "created app tag response is missing id");
+      created = true;
+    }
+
+    const bound = await this.bindAppTag(appId, tagId);
+    if (!bound.ok) return bound;
+    const after = await this.getAppTags(appId);
+    if (!after.ok) return after;
+    const readback = after.data.tags.find((tag) => tag.name === tagName);
+    if (!readback) {
+      return err("DSL_VERSION_MISMATCH", `app tag ${tagName} is missing after bind readback`, {
+        details: { app_id: appId, tag_id: tagId, after: after.data.tags },
+      });
+    }
+    return ok({
+      action: created ? "created_and_bound" : "bound",
+      app_id: appId,
+      tag: readback,
+      after: after.data.tags,
+    });
+  }
 
   // --- workspaces ---
   listWorkspaces(): Promise<Result<unknown>> {

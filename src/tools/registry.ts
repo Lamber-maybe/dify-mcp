@@ -147,6 +147,27 @@ export const tools: Tool[] = [
       (needClient(ctx, "console") as ConsoleClient).updateApp(req(args, "app_id"), pick(args, ["name", "description", "icon", "icon_type", "icon_background"])),
   },
   {
+    name: "app.list_tags",
+    summary: "List the exact tags currently bound to one app.",
+    needs: "console",
+    schema: { type: "object", properties: { app_id: S("app uuid") }, required: ["app_id"] },
+    run: async (args, ctx) =>
+      (needClient(ctx, "console") as ConsoleClient).getAppTags(req(args, "app_id")),
+  },
+  {
+    name: "app.ensure_tag",
+    summary: "Create an app tag if needed, bind it to an app, and verify exact-name readback. Requires confirm=true.",
+    needs: "console",
+    confirm: true,
+    schema: {
+      type: "object",
+      properties: { app_id: S("app uuid"), tag: S("exact app tag name"), confirm: CONFIRM },
+      required: ["app_id", "tag", "confirm"],
+    },
+    run: async (args, ctx) =>
+      (needClient(ctx, "console") as ConsoleClient).ensureAppTag(req(args, "app_id"), req(args, "tag")),
+  },
+  {
     name: "app.delete",
     summary: "Delete an app. Destructive; requires confirm=true.",
     needs: "console",
