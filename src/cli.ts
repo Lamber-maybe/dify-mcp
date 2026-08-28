@@ -108,10 +108,17 @@ export function parseFlags(argv: string[]): { positional: string[]; flags: Recor
 export function resolveConsoleLoginCredentials(
   flags: Record<string, unknown>,
   env: NodeJS.ProcessEnv = process.env,
-): { email?: string; password?: string } {
+): { email?: string; password?: string; passwordEncoding: "plain" | "base64" } {
+  const rawEncoding = str(flags["password-encoding"])
+    ?? str(env.DIFY_CONSOLE_PASSWORD_ENCODING)
+    ?? "plain";
+  if (rawEncoding !== "plain" && rawEncoding !== "base64") {
+    throw new Error("password encoding must be 'plain' or 'base64'");
+  }
   return {
     email: str(flags.email) ?? str(env.DIFY_CONSOLE_EMAIL),
     password: str(flags.password) ?? str(env.DIFY_CONSOLE_PASSWORD),
+    passwordEncoding: rawEncoding,
   };
 }
 
@@ -238,7 +245,13 @@ async function authMain(args: string[], flags: Record<string, unknown>): Promise
     }
     case "login-console": {
       const base = needBase();
-      const { email, password } = resolveConsoleLoginCredentials(flags);
+      let credentials: ReturnType<typeof resolveConsoleLoginCredentials>;
+      try {
+        credentials = resolveConsoleLoginCredentials(flags);
+      } catch (e) {
+        return finish(err("USAGE_ERROR", e instanceof Error ? e.message : String(e)), flags);
+      }
+      const { email, password, passwordEncoding } = credentials;
       if (!email || !password) {
         return finish(
           err(
@@ -248,7 +261,7 @@ async function authMain(args: string[], flags: Record<string, unknown>): Promise
           flags,
         );
       }
-      const result = await consoleLogin(base, email, password);
+      const result = await consoleLogin(base, email, password, passwordEncoding);
       if (result.ok) storeCookies(base, result.data);
       return finish(result.ok ? { ok: true, data: { stored: true, base_url: base, cookies: Object.keys(result.data) } } : (result as Result<unknown>), flags);
     }
@@ -321,6 +334,7 @@ function printHelp(positional: string[]): void {
     "  --workspace <id>              workspace id (or DIFY_WORKSPACE_ID)",
     "  --openapi-token / --console-token   tokens (or DIFY_OPENAPI_TOKEN / DIFY_CONSOLE_TOKEN)",
     "  --email / --password            console login (or DIFY_CONSOLE_EMAIL / DIFY_CONSOLE_PASSWORD)",
+    "  --password-encoding <plain|base64>  login payload encoding (or DIFY_CONSOLE_PASSWORD_ENCODING)",
     "  --yes                         confirm destructive ops (maps to confirm=true)",
     "  --dry-run                     validate + diff without saving",
     "  --graph <file|-|{json}>       graph input: file, stdin, or inline JSON",

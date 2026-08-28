@@ -128,6 +128,11 @@ difywf auth login-console --base-url https://your-dify --email you@x --password 
 DIFY_CONSOLE_EMAIL=you@x DIFY_CONSOLE_PASSWORD='***' \
   difywf auth login-console --base-url https://your-dify
 
+# Deployments whose login endpoint expects the legacy encoded payload:
+DIFY_CONSOLE_EMAIL=you@x DIFY_CONSOLE_PASSWORD='***' \
+  DIFY_CONSOLE_PASSWORD_ENCODING=base64 \
+  difywf auth login-console --base-url https://your-dify
+
 difywf auth status   # confirm: shows base URL + cookie names (values masked)
 ```
 

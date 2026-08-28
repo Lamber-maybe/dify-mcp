@@ -20,13 +20,23 @@ test("console login credentials prefer flags and fall back to environment", () =
       DIFY_CONSOLE_EMAIL: "bot@example.com",
       DIFY_CONSOLE_PASSWORD: "from-env",
     }),
-    { email: "bot@example.com", password: "from-env" },
+    { email: "bot@example.com", password: "from-env", passwordEncoding: "plain" },
   );
   assert.deepEqual(
     resolveConsoleLoginCredentials(
       { email: "flag@example.com", password: "from-flags" },
       { DIFY_CONSOLE_EMAIL: "env@example.com", DIFY_CONSOLE_PASSWORD: "from-env" },
     ),
-    { email: "flag@example.com", password: "from-flags" },
+    { email: "flag@example.com", password: "from-flags", passwordEncoding: "plain" },
+  );
+  assert.equal(
+    resolveConsoleLoginCredentials({}, {
+      DIFY_CONSOLE_PASSWORD_ENCODING: "base64",
+    }).passwordEncoding,
+    "base64",
+  );
+  assert.throws(
+    () => resolveConsoleLoginCredentials({}, { DIFY_CONSOLE_PASSWORD_ENCODING: "rot13" }),
+    /plain.*base64/,
   );
 });
