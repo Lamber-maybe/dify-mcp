@@ -4,12 +4,12 @@
 
 ### The most complete MCP server + CLI for [Dify](https://github.com/langgenius/dify)
 
-**138 tools. 16 namespaces. One registry.** Let any AI agent build, test, and ship
+**141 tools. 16 namespaces. One registry.** Let any AI agent build, test, and ship
 Dify workflows autonomously — everything a human can do in the UI, now scriptable.
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Node >= 23.6](https://img.shields.io/badge/node-%E2%89%A523.6-green.svg)](https://nodejs.org)
-[![138 Tools](https://img.shields.io/badge/tools-138-purple.svg)](#tools)
+[![141 Tools](https://img.shields.io/badge/tools-141-purple.svg)](#tools)
 [![Live Verified](https://img.shields.io/badge/live--verified-cloud.dify.ai-brightgreen.svg)](#live-verified)
 
 Works with **Claude Code** · **Codex** · **Gemini CLI** · **Cursor** · **Cline** · **Windsurf** · **Roo Code** · **Continue** · **Aider** · **Zed** — and any other MCP-compatible or shell-capable agent.
@@ -26,7 +26,7 @@ create workflows, wire up nodes, test them, iterate, and publish — without a b
 
 **dify-mcp** is the bridge. It exposes the **entire Dify console API** as a unified
 tool registry with **two surfaces**: a CLI any shell-capable agent can drive, and an
-MCP server (stdio or Streamable HTTP) any MCP-compatible host can attach. Same 138 tools, same JSON
+MCP server (stdio or Streamable HTTP) any MCP-compatible host can attach. Same 141 tools, same JSON
 contract, same safety guarantees.
 
 ```
@@ -34,7 +34,7 @@ contract, same safety guarantees.
 │                    dify-mcp                              │
 │                                                          │
 │   ┌──────────┐    ┌────────────────────┐    ┌─────────┐ │
-│   │  CLI     │───▶│   138-tool         │───▶│  Dify   │ │
+│   │  CLI     │───▶│   141-tool         │───▶│  Dify   │ │
 │   │  difywf  │    │   registry         │    │  API    │ │
 │   └──────────┘    │                    │    └─────────┘ │
 │   ┌──────────┐    │  app · workflow    │         ▲      │
@@ -99,7 +99,7 @@ Every tool category has been tested against **cloud.dify.ai** with real credenti
 - ✅ All 16 namespaces exercised: apps, workflows, providers, plugins, triggers,
   snippets, RAG, agents, stats, comments, annotations, audio, files, runs, workspace
 - ✅ MCP transport: `tools/call` over stdio and Streamable HTTP with live cookie auth
-- ✅ 42 unit tests · typecheck clean · MCP smoke (138 tools)
+- ✅ Unit tests · typecheck clean · MCP smoke (141 tools)
 
 ## Quickstart
 
@@ -140,11 +140,12 @@ difywf wf draft sync <app-id> --graph graph.json --dry-run   # preview diff
 difywf wf draft sync <app-id> --graph graph.json             # save draft
 difywf wf test <app-id> --input query="hello"                # test-run the draft
 difywf wf publish <app-id> --yes                             # ship it
+difywf workflow tool refresh-provider <app-id> --yes        # rebind workflow-as-tool to the published version
 ```
 
 ### Connect your agent (MCP)
 
-Same binary, same 138 tools. Copy-paste the config for your host:
+Same binary, same 141 tools. Copy-paste the config for your host:
 
 <details>
 <summary><b>Claude Code</b></summary>
@@ -268,13 +269,13 @@ store instead of putting tokens in the image.
 
 ## Tools
 
-**138 tools across 16 namespaces.** Run `difywf --help` for the full live list, or
+**141 tools across 16 namespaces.** Run `difywf --help` for the full live list, or
 `difywf agent guide` for the agent-oriented playbook.
 
 | Namespace | Tools | What it does |
 |-----------|-------|-------------|
 | `app` | 13 | List, create, update, delete, export, import, copy, rename, convert apps |
-| `workflow` | 22 | Get/sync drafts, validate, run, publish, node defaults, variables, versions, HITL |
+| `workflow` | 25 | Get/sync drafts, validate, run, publish, workflow-tool providers, node defaults, variables, versions, HITL |
 | `provider` | 3 | List providers, list models, set credentials |
 | `plugin` | 1 | List installed plugins |
 | `trigger` | 4 | Create, enable, list, webhook triggers; run triggers |
@@ -310,8 +311,8 @@ before retrying.
 
 ```bash
 npm run typecheck   # tsc --noEmit
-npm test            # 42 unit tests
-npm run smoke:mcp   # MCP stdio smoke (138 tools, JSON-RPC handshake)
+npm test            # 49 unit tests
+npm run smoke:mcp   # MCP stdio smoke (141 tools, JSON-RPC handshake)
 npm run smoke:mcp:http   # MCP Streamable HTTP smoke (stateless POST /mcp)
 ```
 

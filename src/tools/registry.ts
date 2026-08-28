@@ -278,6 +278,48 @@ export const tools: Tool[] = [
       (needClient(ctx, "console") as ConsoleClient).publish(req(args, "app_id"), pick(args, ["marked_name", "marked_comment"])),
   },
   {
+    name: "workflow.tool_get",
+    summary: "Get a workflow-as-tool provider by workflow app id or workflow tool id, including its synced status.",
+    needs: "console",
+    schema: {
+      type: "object",
+      properties: { app_id: S("workflow app uuid"), workflow_tool_id: S("workflow tool provider uuid") },
+      anyOf: [{ required: ["app_id"] }, { required: ["workflow_tool_id"] }],
+    },
+    run: async (args, ctx) => {
+      const appId = str(args.app_id);
+      const toolId = str(args.workflow_tool_id);
+      if (!appId && !toolId) throw new ToolError("USAGE_ERROR", "pass app_id or workflow_tool_id");
+      return (needClient(ctx, "console") as ConsoleClient).getWorkflowTool({ appId, toolId });
+    },
+  },
+  {
+    name: "workflow.tool_refresh_provider",
+    summary: "Create or update a workflow-as-tool provider so it targets the app's current published version; verifies synced=true.",
+    needs: "console",
+    confirm: true,
+    schema: {
+      type: "object",
+      properties: { app_id: S("published workflow app uuid"), confirm: CONFIRM },
+      required: ["app_id", "confirm"],
+    },
+    run: async (args, ctx) =>
+      (needClient(ctx, "console") as ConsoleClient).refreshWorkflowToolProvider(req(args, "app_id")),
+  },
+  {
+    name: "workflow.tool_delete",
+    summary: "Delete a workflow-as-tool provider. Destructive; requires confirm=true.",
+    needs: "console",
+    confirm: true,
+    schema: {
+      type: "object",
+      properties: { workflow_tool_id: S("workflow tool provider uuid"), confirm: CONFIRM },
+      required: ["workflow_tool_id", "confirm"],
+    },
+    run: async (args, ctx) =>
+      (needClient(ctx, "console") as ConsoleClient).deleteWorkflowTool(req(args, "workflow_tool_id")),
+  },
+  {
     name: "provider.list",
     summary: "List model providers configured in the workspace.",
     needs: "console",

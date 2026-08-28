@@ -10,7 +10,11 @@ import { runTool, tools } from "./tools/registry.ts";
 
 const VERSION = "0.1.0";
 
-const NS_ALIASES: Record<string, string> = { wf: "workflow", providers: "provider", plugins: "plugin" };
+const NS_ALIASES: Record<string, string> = {
+  wf: "workflow",
+  providers: "provider",
+  plugins: "plugin",
+};
 const CMD_ALIASES: Record<string, string> = {
   "workflow test": "workflow.run_draft",
   "workflow draft get": "workflow.get_draft",
@@ -23,6 +27,7 @@ const POSITIONALS: Record<string, string[]> = {
   "workflow.get_draft": ["app_id"], "workflow.node_defaults": ["app_id", "node_type"], "workflow.sync_draft": ["app_id"],
   "workflow.run_draft": ["app_id"], "workflow.run": ["app_id"], "workflow.publish": ["app_id"],
   "workflow.run_node": ["app_id", "node_id"], "workflow.events": ["app_id", "task_id"], "workflow.stop": ["app_id", "task_id"],
+  "workflow.tool_get": ["app_id"], "workflow.tool_refresh_provider": ["app_id"], "workflow.tool_delete": ["workflow_tool_id"],
   "provider.models": ["provider"],
   "workflow.get_features": ["app_id"], "workflow.set_features": ["app_id"],
   "workflow.list_env_vars": ["app_id"], "workflow.list_conv_vars": ["app_id"],
