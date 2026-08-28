@@ -66,7 +66,10 @@ const POSITIONALS: Record<string, string[]> = {
   "agent.sandbox_info": ["agent_id"], "agent.sandbox_files": ["agent_id"], "agent.sandbox_read": ["agent_id"], "agent.sandbox_upload": ["agent_id"],
   "agent.guide": ["section"],
 };
-const CONTROL_FLAGS = new Set(["o", "output", "help", "h", "version", "base-url", "workspace", "openapi-token", "console-token"]);
+const CONTROL_FLAGS = new Set([
+  "o", "output", "output-file", "help", "h", "version", "base-url", "workspace",
+  "openapi-token", "console-token",
+]);
 
 export function parseFlags(argv: string[]): { positional: string[]; flags: Record<string, unknown> } {
   const positional: string[] = [];
@@ -297,6 +300,13 @@ async function authMain(args: string[], flags: Record<string, unknown>): Promise
 
 function finish(result: Result<unknown>, flags: Record<string, unknown>): void {
   const format = String(flags.o ?? flags.output ?? "json");
+  const outputFile = str(flags["output-file"]);
+  if (outputFile) {
+    const rendered = format === "yaml" ? toYaml(result) + "\n" : JSON.stringify(result) + "\n";
+    fs.writeFileSync(outputFile, rendered, { encoding: "utf8" });
+    process.stdout.write(JSON.stringify({ ok: true, output_file: outputFile }) + "\n");
+    process.exit(result.ok ? EXIT.OK : EXIT[result.error.code]);
+  }
   if (format === "yaml") {
     process.stdout.write(toYaml(result) + "\n");
   } else if (format === "text") {
@@ -330,6 +340,7 @@ function printHelp(positional: string[]): void {
     "",
     "GLOBAL FLAGS",
     "  -o, --output json|yaml|text   output format (default json; MCP always json)",
+    "  --output-file <path>          write the full result to a file; stdout returns a small acknowledgement",
     "  --base-url <url>              Dify base URL (or DIFY_API_BASE)",
     "  --workspace <id>              workspace id (or DIFY_WORKSPACE_ID)",
     "  --openapi-token / --console-token   tokens (or DIFY_OPENAPI_TOKEN / DIFY_CONSOLE_TOKEN)",

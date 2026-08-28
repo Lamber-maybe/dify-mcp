@@ -1,5 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { parseFlags, resolveConsoleLoginCredentials } from "../src/cli.ts";
 
 test("parseFlags handles positionals, values, =values, booleans, repeats", () => {
@@ -7,11 +11,13 @@ test("parseFlags handles positionals, values, =values, booleans, repeats", () =>
     "wf", "run", "app-1",
     "--input", "a=1", "--input", "b=2",
     "--yes", "--graph=test/fixtures/valid.json", "-o", "json",
+    "--output-file", "/tmp/difywf-result.json",
   ]);
   assert.deepEqual(positional, ["wf", "run", "app-1"]);
   assert.deepEqual(flags.input, ["a=1", "b=2"]);
   assert.equal(flags.yes, true);
   assert.equal(flags.graph, "test/fixtures/valid.json");
+  assert.equal(flags["output-file"], "/tmp/difywf-result.json");
 });
 
 test("console login credentials prefer flags and fall back to environment", () => {
@@ -39,4 +45,20 @@ test("console login credentials prefer flags and fall back to environment", () =
     () => resolveConsoleLoginCredentials({}, { DIFY_CONSOLE_PASSWORD_ENCODING: "rot13" }),
     /plain.*base64/,
   );
+});
+
+test("output-file carries large structured results outside stdout", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "difywf-output-"));
+  const output = path.join(dir, "result.json");
+  const stdout = execFileSync(
+    process.execPath,
+    ["bin/difywf.js", "agent", "guide", "all", "--output", "json", "--output-file", output],
+    { encoding: "utf8" },
+  );
+  const acknowledgement = JSON.parse(stdout);
+  const result = JSON.parse(readFileSync(output, "utf8"));
+  assert.equal(acknowledgement.ok, true);
+  assert.equal(acknowledgement.output_file, output);
+  assert.equal(result.ok, true);
+  assert.match(result.data, /golden path/i);
 });

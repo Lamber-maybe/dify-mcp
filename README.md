@@ -78,7 +78,8 @@ Don't see your agent? If it supports MCP or can run shell commands, it works. Th
 - **Agent-agnostic by design.** No SDK lock-in. The CLI works with any agent that
   can run a shell command. The MCP server works with any MCP host. Both return
   structured JSON — `{ ok, data }` or `{ ok: false, error: { code, message, retryable } }`
-  — so agents never scrape human-readable text.
+  — so agents never scrape human-readable text. For large drafts and exports, the CLI's
+  `--output-file <path>` keeps the full UTF-8 result off size-limited stdout transports.
 
 - **Cookie auth, handled.** Dify's console uses cookie + CSRF double-submit, not
   Bearer tokens. dify-mcp captures, stores, and auto-refreshes the session — including
