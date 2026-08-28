@@ -239,8 +239,9 @@ For remote or containerized hosts that can't spawn a local process, run the MCP
 server over the stateless Streamable HTTP transport:
 
 ```bash
-difywf mcp serve --http --port 8080
-# or via env: DIFYWF_MCP_TRANSPORT=http DIFYWF_MCP_PORT=8080 difywf mcp serve
+difywf mcp serve --http --host 127.0.0.1 --port 8080
+# or via env: DIFYWF_MCP_TRANSPORT=http DIFYWF_MCP_HOST=127.0.0.1 \
+#             DIFYWF_MCP_PORT=8080 difywf mcp serve
 ```
 
 Point any Streamable-HTTP-capable client at `http://<host>:8080/mcp`. Each POST is
