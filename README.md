@@ -286,7 +286,7 @@ store instead of putting tokens in the image.
 
 | Namespace | Tools | What it does |
 |-----------|-------|-------------|
-| `app` | 15 | List, create, update, tag, delete, export, import, copy, rename, convert apps |
+| `app` | 16 | List, create, update, tag, untag, delete, export, import, copy, rename, convert apps |
 | `workflow` | 25 | Get/sync drafts, validate, run, publish, workflow-tool providers, node defaults, variables, versions, HITL |
 | `provider` | 3 | List providers, list models, set credentials |
 | `plugin` | 1 | List installed plugins |

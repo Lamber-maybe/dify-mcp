@@ -11,10 +11,10 @@ const fakeCtx = (overrides: Partial<ToolCtx> = {}): ToolCtx => ({
   ...overrides,
 });
 
-test("registry has 143 tools, all names unique", () => {
+test("registry has 144 tools, all names unique", () => {
   const names = tools.map((t) => t.name);
-  assert.equal(names.length, 143);
-  assert.equal(new Set(names).size, 143);
+  assert.equal(names.length, 144);
+  assert.equal(new Set(names).size, 144);
 });
 
 test("every tool name is ns.verb and maps to an MCP-safe name", () => {

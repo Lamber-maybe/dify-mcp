@@ -99,6 +99,11 @@ export class ConsoleClient {
       body: { tag_ids: [tagId], target_id: appId, type: "app" },
     });
   }
+  removeAppTagBinding(appId: string, tagId: string): Promise<Result<unknown>> {
+    return this.call("tag-bindings/remove", {
+      body: { tag_ids: [tagId], target_id: appId, type: "app" },
+    });
+  }
   async ensureAppTag(appId: string, tagName: string): Promise<Result<unknown>> {
     const before = await this.getAppTags(appId);
     if (!before.ok) return before;
@@ -139,6 +144,43 @@ export class ConsoleClient {
       action: created ? "created_and_bound" : "bound",
       app_id: appId,
       tag: readback,
+      after: after.data.tags,
+    });
+  }
+  async removeAppTag(appId: string, tagName: string): Promise<Result<unknown>> {
+    const before = await this.getAppTags(appId);
+    if (!before.ok) return before;
+    const existing = before.data.tags.find((tag) => tag.name === tagName);
+    if (!existing) {
+      return ok({ action: "unchanged", app_id: appId, tag: tagName, after: before.data.tags });
+    }
+
+    let tagId = existing.id;
+    if (!tagId) {
+      const listed = await this.listAppTags();
+      if (!listed.ok) return listed;
+      const rows = Array.isArray(listed.data) ? listed.data : [];
+      for (const item of rows) {
+        if (!item || typeof item !== "object") continue;
+        const value = item as Record<string, unknown>;
+        if (value.name === tagName) tagId = nonEmptyString(value.id);
+      }
+    }
+    if (!tagId) return err("SERVER_ERROR", `app tag ${tagName} has no resolvable id`);
+
+    const removed = await this.removeAppTagBinding(appId, tagId);
+    if (!removed.ok) return removed;
+    const after = await this.getAppTags(appId);
+    if (!after.ok) return after;
+    if (after.data.tags.some((tag) => tag.name === tagName)) {
+      return err("DSL_VERSION_MISMATCH", `app tag ${tagName} remains after unbind readback`, {
+        details: { app_id: appId, tag_id: tagId, after: after.data.tags },
+      });
+    }
+    return ok({
+      action: "removed",
+      app_id: appId,
+      tag: { id: tagId, name: tagName },
       after: after.data.tags,
     });
   }

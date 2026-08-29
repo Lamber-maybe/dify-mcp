@@ -168,6 +168,19 @@ export const tools: Tool[] = [
       (needClient(ctx, "console") as ConsoleClient).ensureAppTag(req(args, "app_id"), req(args, "tag")),
   },
   {
+    name: "app.remove_tag",
+    summary: "Unbind one exact-name tag from an app and verify readback. Requires confirm=true.",
+    needs: "console",
+    confirm: true,
+    schema: {
+      type: "object",
+      properties: { app_id: S("app uuid"), tag: S("exact app tag name"), confirm: CONFIRM },
+      required: ["app_id", "tag", "confirm"],
+    },
+    run: async (args, ctx) =>
+      (needClient(ctx, "console") as ConsoleClient).removeAppTag(req(args, "app_id"), req(args, "tag")),
+  },
+  {
     name: "app.delete",
     summary: "Delete an app. Destructive; requires confirm=true.",
     needs: "console",

@@ -24,6 +24,7 @@ test("ConsoleClient app-tag methods use the Dify Console API contract", async ()
     await client.listAppTags();
     await client.createAppTag("ndr-managed");
     await client.bindAppTag("app-1", "tag-1");
+    await client.removeAppTagBinding("app-1", "tag-1");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -32,10 +33,12 @@ test("ConsoleClient app-tag methods use the Dify Console API contract", async ()
     ["GET", "/console/api/tags"],
     ["POST", "/console/api/tags"],
     ["POST", "/console/api/tag-bindings"],
+    ["POST", "/console/api/tag-bindings/remove"],
   ]);
   assert.equal(new URL(calls[0].url).searchParams.get("type"), "app");
   assert.deepEqual(calls[1].body, { name: "ndr-managed", type: "app" });
   assert.deepEqual(calls[2].body, { tag_ids: ["tag-1"], target_id: "app-1", type: "app" });
+  assert.deepEqual(calls[3].body, { tag_ids: ["tag-1"], target_id: "app-1", type: "app" });
 });
 
 test("ensureAppTag binds an existing exact-name tag and verifies readback", async () => {
@@ -87,6 +90,63 @@ test("app.ensure_tag is confirm-gated", async () => {
   const tool = tools.find((item) => item.name === "app.ensure_tag");
   assert.ok(tool);
   const result = await runTool(tool!, { app_id: "app-1", tag: "ndr-managed" }, { _surface: "mcp" });
+  assert.ok(!result.ok);
+  if (!result.ok) assert.equal(result.error.code, "CONFIRM_REQUIRED");
+});
+
+test("removeAppTag unbinds an exact-name tag and verifies readback", async () => {
+  const client = new ConsoleClient("https://dify.example", "token");
+  let reads = 0;
+  let removed: [string, string] | undefined;
+  client.getAppTags = async () => ok({
+    app_id: "app-1",
+    tags: reads++ === 0 ? [{ id: "tag-1", name: "workflow-beta-1.0" }] : [],
+  });
+  client.removeAppTagBinding = async (appId, tagId) => {
+    removed = [appId, tagId];
+    return ok({ result: "success" });
+  };
+
+  const result = await client.removeAppTag("app-1", "workflow-beta-1.0");
+
+  assert.ok(result.ok);
+  if (result.ok) assert.equal((result.data as Record<string, unknown>).action, "removed");
+  assert.deepEqual(removed, ["app-1", "tag-1"]);
+});
+
+test("removeAppTag performs zero writes when the exact tag is absent", async () => {
+  const client = new ConsoleClient("https://dify.example", "token");
+  client.getAppTags = async () => ok({ app_id: "app-1", tags: [] });
+  client.removeAppTagBinding = async () => { throw new Error("must not remove an absent tag"); };
+
+  const result = await client.removeAppTag("app-1", "workflow-beta-1.0");
+
+  assert.ok(result.ok);
+  if (result.ok) assert.equal((result.data as Record<string, unknown>).action, "unchanged");
+});
+
+test("removeAppTag fails closed when unbind readback still contains the tag", async () => {
+  const client = new ConsoleClient("https://dify.example", "token");
+  client.getAppTags = async () => ok({
+    app_id: "app-1",
+    tags: [{ id: "tag-1", name: "workflow-beta-1.0" }],
+  });
+  client.removeAppTagBinding = async () => ok({ result: "success" });
+
+  const result = await client.removeAppTag("app-1", "workflow-beta-1.0");
+
+  assert.ok(!result.ok);
+  if (!result.ok) assert.equal(result.error.code, "DSL_VERSION_MISMATCH");
+});
+
+test("app.remove_tag is confirm-gated", async () => {
+  const tool = tools.find((item) => item.name === "app.remove_tag");
+  assert.ok(tool);
+  const result = await runTool(
+    tool!,
+    { app_id: "app-1", tag: "workflow-beta-1.0" },
+    { _surface: "mcp" },
+  );
   assert.ok(!result.ok);
   if (!result.ok) assert.equal(result.error.code, "CONFIRM_REQUIRED");
 });
